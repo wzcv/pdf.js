@@ -44,7 +44,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add website
-          git commit -m "Add website directory with build files"
-          git push
+          git commit -m "Add website directory with build files" || echo "No changes to commit"
+          git push || echo "Push failed"
         env:
-          GIT_PUSH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_PUSH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # 

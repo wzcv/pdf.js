@@ -14621,7 +14621,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.8.57";
+    const viewerVersion = "4.8.59";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -18227,9 +18227,6 @@ initCom(PDFViewerApplication);
         return;
       }
       const fileOrigin = new URL(file, window.location.href).origin;
-      if (fileOrigin !== viewerOrigin) {
-        throw new Error("file origin does not match viewer's");
-      }
     } catch (ex) {
       PDFViewerApplication._documentError("pdfjs-loading-error", {
         message: ex.message
@@ -18898,8 +18895,8 @@ function beforeUnload(evt) {
 
 
 
-const pdfjsVersion = "4.8.57";
-const pdfjsBuild = "84370c60e";
+const pdfjsVersion = "4.8.59";
+const pdfjsBuild = "d050d2928";
 const AppConstants = {
   LinkTarget: LinkTarget,
   RenderingStates: RenderingStates,

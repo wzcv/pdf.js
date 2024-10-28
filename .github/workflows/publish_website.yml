@@ -46,3 +46,5 @@ jobs:
           git add website
           git commit -m "Add website directory with build files"
           git push
+        env:
+          GIT_PUSH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

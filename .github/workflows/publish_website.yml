@@ -67,6 +67,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add website2
+          git add -f website2/build/* 
           git commit -m "Add website directory with build files" || echo "No changes to commit"
           git push || echo "Push failed"
 

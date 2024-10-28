@@ -73,7 +73,7 @@ jobs:
 
       - name: Extract the website
         run: |
-          tar -xvf ${{ runner.temp }}/website.tar -C ${{ runner.temp }}/website
+          tar -xvf ${{ runner.temp }}/website/website.tar -C ${{ runner.temp }}/website
 
       - name: Deploy to website branch
         run: |

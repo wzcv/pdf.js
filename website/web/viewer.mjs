@@ -10855,7 +10855,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.8.48";
+    const viewerVersion = "4.8.51";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -15121,8 +15121,8 @@ function beforeUnload(evt) {
 
 
 
-const pdfjsVersion = "4.8.48";
-const pdfjsBuild = "c9912e9c6";
+const pdfjsVersion = "4.8.51";
+const pdfjsBuild = "4007ba346";
 const AppConstants = {
   LinkTarget: LinkTarget,
   RenderingStates: RenderingStates,

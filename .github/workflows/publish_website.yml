@@ -5,7 +5,7 @@ on:
       - master
   workflow_dispatch: # 允许手动触发工作流
 permissions:
-  contents: write
+  contents: read
   pages: write  # 增加权限以推送到GitHub Pages
 
 jobs:
@@ -33,6 +33,30 @@ jobs:
       - name: Build the website
         run: npx gulp web
 
+      - name: Archive the website
+        shell: sh
+        run: |
+          chmod -c -R +rX "$INPUT_PATH" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+          tar \
+            --dereference --hard-dereference \
+            --directory "$INPUT_PATH" \
+            -cvf "$RUNNER_TEMP/website.tar" \
+            --exclude=.git \
+            --exclude=.github \
+            .
+        env:
+          INPUT_PATH: build/gh-pages
+
+      - name: Upload the website
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/website.tar
+          retention-days: 1
+          if-no-files-found: error
+
       - name: Copy build files to website directory
         run: cp -r build/gh-pages/* website/
 
@@ -44,24 +68,5 @@ jobs:
           git commit -m "Add website directory with build files" || echo "No changes to commit"
           git push || echo "Push failed"
 
-        env:
-          GIT_PUSH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # 
-
-      - name: Create website branch
-        run: |
-          cd website
-          # 检查website分支是否存在，如果不存在则创建
-          if [ -z "$(git branch --list website)" ]; then
-            git checkout --orphan website
-          else
-            git checkout website
-          fi
-          git checkout -b website
-          
-      - name: Add, commit, and push to website branch
-        run: |
-          git add .
-          git commit -m "Update website branch"
-          git push -u origin website
         env:
           GIT_PUSH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

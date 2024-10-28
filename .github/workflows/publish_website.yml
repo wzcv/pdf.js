@@ -50,6 +50,12 @@ jobs:
       - name: Create website branch
         run: |
           cd website
+          # 检查website分支是否存在，如果不存在则创建
+          if [ -z "$(git branch --list website)" ]; then
+            git checkout --orphan website
+          else
+            git checkout website
+          fi
           git checkout -b website
           
       - name: Add, commit, and push to website branch

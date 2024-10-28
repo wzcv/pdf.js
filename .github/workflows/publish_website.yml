@@ -50,13 +50,13 @@ jobs:
       - name: Create website branch
         run: |
           git checkout -b website
-          git branch --set-upstream-to=origin/website website
-
-
+          
       - name: Add, commit, and push to website branch
         run: |
+          rm -rf .
+          cp -r build/gh-pages/* .
           git add .
-          git commit -m "Deploy to website branch" || echo "No changes to commit"
-          git push || echo "Push failed"
+          git commit -m "Update website branch"
+          git push -u origin website
         env:
           GIT_PUSH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

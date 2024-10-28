@@ -33,9 +33,6 @@ jobs:
       - name: Build the website
         run: npx gulp web
 
-      - name: Create website directory
-        run: mkdir website
-
       - name: Copy build files to website directory
         run: cp -r build/gh-pages/* website/
 
@@ -55,8 +52,6 @@ jobs:
           git checkout -b website
           git branch --set-upstream-to=origin/website website
 
-      - name: Copy build files to website branch
-        run: cp -r build/gh-pages/* .
 
       - name: Add, commit, and push to website branch
         run: |

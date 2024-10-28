@@ -46,5 +46,22 @@ jobs:
           git add website
           git commit -m "Add website directory with build files" || echo "No changes to commit"
           git push || echo "Push failed"
+
         env:
           GIT_PUSH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # 
+
+      - name: Create website branch
+        run: |
+          git checkout -b website
+          git branch --set-upstream-to=origin/website website
+
+      - name: Copy build files to website branch
+        run: cp -r build/gh-pages/* .
+
+      - name: Add, commit, and push to website branch
+        run: |
+          git add .
+          git commit -m "Deploy to website branch" || echo "No changes to commit"
+          git push || echo "Push failed"
+        env:
+          GIT_PUSH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

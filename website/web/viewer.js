@@ -10856,9 +10856,9 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
     const viewerVersion = "4.8.62";
-    if (version !== viewerVersion) {
-      throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
-    }
+    // if (version !== viewerVersion) {
+    //   throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
+    // }
     this.container = options.container;
     this.viewer = options.viewer || options.container.firstElementChild;
     if (this.container?.tagName !== "DIV" || this.viewer?.tagName !== "DIV") {

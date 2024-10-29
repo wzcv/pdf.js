@@ -39,6 +39,8 @@ jobs:
           chmod -c -R +rX "$INPUT_PATH" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
+          mkdir "$INPUT_PATH/static"
+          cp -r /static/*  "$INPUT_PATH/static"
           tar \
             --dereference --hard-dereference \
             --directory "$INPUT_PATH" \
@@ -59,7 +61,22 @@ jobs:
 
       - name: Copy build files to website directory
         run: cp -r build/gh-pages/* website/
-
+        
+      - name: Rename and Replace Extension
+        run: |
+          files_to_rename=("pdf.mjs" "pdf.sandbox.mjs" "pdf.worker.mjs" "viewer.mjs")
+          for file in "${files_to_rename[@]}"; do
+            if [ -f "website/build/$file" ]; then
+              mv "website/build/$file" "website/build/${file%.mjs}.js"
+              sed -i 's/\.mjs/\.js/g' "website/build/${file%.mjs}.js"
+            elif [ -f "website/$file" ]; then
+              mv "website/$file" "website/${file%.mjs}.js"
+              sed -i 's/\.mjs/\.js/g' "website/${file%.mjs}.js"
+            else
+              echo "File not found: $file"
+            fi
+          done
+        
       - name: Add, commit, and push to current branch
         run: |
           git config --global user.name "GitHub Actions"

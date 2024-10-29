@@ -3299,6 +3299,7 @@ class DecodeStream extends BaseStream {
 }
 class StreamsSequenceStream extends DecodeStream {
   constructor(streams, onError = null) {
+    streams = streams.filter(s => s instanceof BaseStream);
     let maybeLength = 0;
     for (const stream of streams) {
       maybeLength += stream instanceof DecodeStream ? stream._rawMinBufferLength : stream.length;
@@ -28354,9 +28355,13 @@ const MAX_IMAGE_DIM = 65537;
 const MAX_ERROR = 128;
 class ImageResizer {
   static #goodSquareLength = MIN_IMAGE_DIM;
+  static #isChrome = false;
   constructor(imgData, isMask) {
     this._imgData = imgData;
     this._isMask = isMask;
+  }
+  static get canUseImageDecoder() {
+    return shadow(this, "canUseImageDecoder", this.#isChrome || typeof ImageDecoder === "undefined" ? Promise.resolve(false) : ImageDecoder.isTypeSupported("image/bmp"));
   }
   static needsToBeResized(width, height) {
     if (width <= this.#goodSquareLength && height <= this.#goodSquareLength) {
@@ -28401,6 +28406,10 @@ class ImageResizer {
       this.MAX_AREA = area >> 2;
     }
   }
+  static setOptions(opts) {
+    this.setMaxArea(opts.maxArea ?? -1);
+    this.#isChrome = opts.isChrome ?? false;
+  }
   static _areGoodDims(width, height) {
     try {
       const canvas = new OffscreenCanvas(width, height);
@@ -28430,10 +28439,27 @@ class ImageResizer {
   }
   async _createImage() {
     const data = this._encodeBMP();
-    const blob = new Blob([data.buffer], {
-      type: "image/bmp"
-    });
-    const bitmapPromise = createImageBitmap(blob);
+    let decoder, imagePromise;
+    if (await ImageResizer.canUseImageDecoder) {
+      decoder = new ImageDecoder({
+        data,
+        type: "image/bmp",
+        preferAnimation: false,
+        transfer: [data.buffer]
+      });
+      imagePromise = decoder.decode().catch(reason => {
+        warn(`BMP image decoding failed: ${reason}`);
+        return createImageBitmap(new Blob([this._encodeBMP().buffer], {
+          type: "image/bmp"
+        }));
+      }).finally(() => {
+        decoder.close();
+      });
+    } else {
+      imagePromise = createImageBitmap(new Blob([data.buffer], {
+        type: "image/bmp"
+      }));
+    }
     const {
       MAX_AREA,
       MAX_DIM
@@ -28454,7 +28480,8 @@ class ImageResizer {
     steps.splice(-1, 1, factor / (1 << N));
     let newWidth = width;
     let newHeight = height;
-    let bitmap = await bitmapPromise;
+    const result = await imagePromise;
+    let bitmap = result.image || result;
     for (const step of steps) {
       const prevWidth = newWidth;
       const prevHeight = newHeight;
@@ -28463,6 +28490,7 @@ class ImageResizer {
       const canvas = new OffscreenCanvas(newWidth, newHeight);
       const ctx = canvas.getContext("2d");
       ctx.drawImage(bitmap, 0, 0, prevWidth, prevHeight, 0, 0, newWidth, newHeight);
+      bitmap.close();
       bitmap = canvas.transferToImageBitmap();
     }
     imgData.data = null;
@@ -30027,6 +30055,7 @@ const DefaultPartialEvaluatorOptions = Object.freeze({
   ignoreErrors: false,
   isEvalSupported: true,
   isOffscreenCanvasSupported: false,
+  isChrome: false,
   canvasMaxAreaInBytes: -1,
   fontExtraProperties: false,
   useSystemFonts: true,
@@ -30150,7 +30179,10 @@ class PartialEvaluator {
     this.type3FontRefs = null;
     this._regionalImageCache = new RegionalImageCache();
     this._fetchBuiltInCMapBound = this.fetchBuiltInCMap.bind(this);
-    ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
+    ImageResizer.setOptions({
+      isChrome: this.options.isChrome,
+      maxArea: this.options.canvasMaxAreaInBytes
+    });
   }
   get _pdfFunctionFactory() {
     const pdfFunctionFactory = new PDFFunctionFactory({
@@ -56238,7 +56270,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.8.101";
+    const workerVersion = "4.8.114";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -56809,8 +56841,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// ./src/pdf.worker.js
 
-const pdfjsVersion = "4.8.101";
-const pdfjsBuild = "8e84968cc";
+const pdfjsVersion = "4.8.114";
+const pdfjsBuild = "af4cfd982";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };

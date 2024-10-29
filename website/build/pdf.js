@@ -3653,6 +3653,7 @@ class AltText {
   #altText = null;
   #altTextDecorative = false;
   #altTextButton = null;
+  #altTextButtonLabel = null;
   #altTextTooltip = null;
   #altTextTooltipTimeout = null;
   #altTextWasFromKeyBoard = false;
@@ -3662,32 +3663,36 @@ class AltText {
   #textWithDisclaimer = null;
   #useNewAltTextFlow = false;
   static #l10nNewButton = null;
-  static _l10nPromise = null;
+  static _l10n = null;
   constructor(editor) {
     this.#editor = editor;
     this.#useNewAltTextFlow = editor._uiManager.useNewAltTextFlow;
     AltText.#l10nNewButton ||= Object.freeze({
-      added: "pdfjs-editor-new-alt-text-added-button-label",
-      missing: "pdfjs-editor-new-alt-text-missing-button-label",
-      review: "pdfjs-editor-new-alt-text-to-review-button-label"
+      added: "pdfjs-editor-new-alt-text-added-button",
+      "added-label": "pdfjs-editor-new-alt-text-added-button-label",
+      missing: "pdfjs-editor-new-alt-text-missing-button",
+      "missing-label": "pdfjs-editor-new-alt-text-missing-button-label",
+      review: "pdfjs-editor-new-alt-text-to-review-button",
+      "review-label": "pdfjs-editor-new-alt-text-to-review-button-label"
     });
   }
-  static initialize(l10nPromise) {
-    AltText._l10nPromise ||= l10nPromise;
+  static initialize(l10n) {
+    AltText._l10n ??= l10n;
   }
   async render() {
     const altText = this.#altTextButton = document.createElement("button");
     altText.className = "altText";
-    let msg;
+    altText.tabIndex = "0";
+    const label = this.#altTextButtonLabel = document.createElement("span");
+    altText.append(label);
     if (this.#useNewAltTextFlow) {
       altText.classList.add("new");
-      msg = await AltText._l10nPromise.get(AltText.#l10nNewButton.missing);
+      altText.setAttribute("data-l10n-id", AltText.#l10nNewButton.missing);
+      label.setAttribute("data-l10n-id", AltText.#l10nNewButton["missing-label"]);
     } else {
-      msg = await AltText._l10nPromise.get("pdfjs-editor-alt-text-button-label");
+      altText.setAttribute("data-l10n-id", "pdfjs-editor-alt-text-button");
+      label.setAttribute("data-l10n-id", "pdfjs-editor-alt-text-button-label");
     }
-    altText.textContent = msg;
-    altText.setAttribute("aria-label", msg);
-    altText.tabIndex = "0";
     const signal = this.#editor._uiManager._signal;
     altText.addEventListener("contextmenu", noContextMenu, {
       signal
@@ -3754,7 +3759,7 @@ class AltText {
       return;
     }
     this.#guessedText = guessedText;
-    this.#textWithDisclaimer = await AltText._l10nPromise.get("pdfjs-editor-new-alt-text-generated-alt-text-with-disclaimer")({
+    this.#textWithDisclaimer = await AltText._l10n.get("pdfjs-editor-new-alt-text-generated-alt-text-with-disclaimer", {
       generatedAltText: guessedText
     });
     this.#setState();
@@ -3831,6 +3836,7 @@ class AltText {
   destroy() {
     this.#altTextButton?.remove();
     this.#altTextButton = null;
+    this.#altTextButtonLabel = null;
     this.#altTextTooltip = null;
     this.#badge?.remove();
     this.#badge = null;
@@ -3842,15 +3848,8 @@ class AltText {
     }
     if (this.#useNewAltTextFlow) {
       button.classList.toggle("done", !!this.#altText);
-      AltText._l10nPromise.get(AltText.#l10nNewButton[this.#label]).then(msg => {
-        button.setAttribute("aria-label", msg);
-        for (const child of button.childNodes) {
-          if (child.nodeType === Node.TEXT_NODE) {
-            child.textContent = msg;
-            break;
-          }
-        }
-      });
+      button.setAttribute("data-l10n-id", AltText.#l10nNewButton[this.#label]);
+      this.#altTextButtonLabel?.setAttribute("data-l10n-id", AltText.#l10nNewButton[`${this.#label}-label`]);
       if (!this.#altText) {
         this.#altTextTooltip?.remove();
         return;
@@ -3862,9 +3861,7 @@ class AltText {
         return;
       }
       button.classList.add("done");
-      AltText._l10nPromise.get("pdfjs-editor-alt-text-edit-button-label").then(msg => {
-        button.setAttribute("aria-label", msg);
-      });
+      button.setAttribute("data-l10n-id", "pdfjs-editor-alt-text-edit-button");
     }
     let tooltip = this.#altTextTooltip;
     if (!tooltip) {
@@ -3901,7 +3898,12 @@ class AltText {
         signal
       });
     }
-    tooltip.innerText = this.#altTextDecorative ? await AltText._l10nPromise.get("pdfjs-editor-alt-text-decorative-tooltip") : this.#altText;
+    if (this.#altTextDecorative) {
+      tooltip.setAttribute("data-l10n-id", "pdfjs-editor-alt-text-decorative-tooltip");
+    } else {
+      tooltip.removeAttribute("data-l10n-id");
+      tooltip.textContent = this.#altText;
+    }
     if (!tooltip.parentNode) {
       button.append(tooltip);
     }
@@ -3941,7 +3943,7 @@ class AnnotationEditor {
   _isVisible = true;
   _uiManager = null;
   _focusEventsAllowed = true;
-  static _l10nPromise = null;
+  static _l10n = null;
   static _l10nResizer = null;
   #isDraggable = false;
   #zIndex = AnnotationEditor._zIndex++;
@@ -4019,6 +4021,7 @@ class AnnotationEditor {
     fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
   }
   static initialize(l10n, _uiManager) {
+    AnnotationEditor._l10n ??= l10n;
     AnnotationEditor._l10nResizer ||= Object.freeze({
       topLeft: "pdfjs-editor-resizer-top-left",
       topMiddle: "pdfjs-editor-resizer-top-middle",
@@ -4029,7 +4032,6 @@ class AnnotationEditor {
       bottomLeft: "pdfjs-editor-resizer-bottom-left",
       middleLeft: "pdfjs-editor-resizer-middle-left"
     });
-    AnnotationEditor._l10nPromise ||= new Map([...["pdfjs-editor-alt-text-button-label", "pdfjs-editor-alt-text-edit-button-label", "pdfjs-editor-alt-text-decorative-tooltip", "pdfjs-editor-new-alt-text-added-button-label", "pdfjs-editor-new-alt-text-missing-button-label", "pdfjs-editor-new-alt-text-to-review-button-label"].map(str => [str, l10n.get(str)]), ...["pdfjs-editor-new-alt-text-generated-alt-text-with-disclaimer"].map(str => [str, l10n.get.bind(l10n, str)])]);
     if (AnnotationEditor._borderLineWidth !== -1) {
       return;
     }
@@ -4561,7 +4563,7 @@ class AnnotationEditor {
     if (this.#altText) {
       return;
     }
-    AltText.initialize(AnnotationEditor._l10nPromise);
+    AltText.initialize(AnnotationEditor._l10n);
     this.#altText = new AltText(this);
     if (this.#accessibilityData) {
       this.#altText.data = this.#accessibilityData;
@@ -11158,6 +11160,7 @@ function getDocument(src = {}) {
   const maxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize > -1 ? src.maxImageSize : -1;
   const isEvalSupported = src.isEvalSupported !== false;
   const isOffscreenCanvasSupported = typeof src.isOffscreenCanvasSupported === "boolean" ? src.isOffscreenCanvasSupported : !isNodeJS;
+  const isChrome = typeof src.isChrome === "boolean" ? src.isChrome : !util_FeatureTest.platform.isFirefox && typeof window !== "undefined" && !!window?.chrome;
   const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes) ? src.canvasMaxAreaInBytes : -1;
   const disableFontFace = typeof src.disableFontFace === "boolean" ? src.disableFontFace : isNodeJS;
   const fontExtraProperties = src.fontExtraProperties === true;
@@ -11208,7 +11211,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "4.8.101",
+    apiVersion: "4.8.114",
     data,
     password,
     disableAutoFetch,
@@ -11222,6 +11225,7 @@ function getDocument(src = {}) {
       ignoreErrors,
       isEvalSupported,
       isOffscreenCanvasSupported,
+      isChrome,
       canvasMaxAreaInBytes,
       fontExtraProperties,
       useSystemFonts,
@@ -13008,8 +13012,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.8.101";
-const build = "8e84968cc";
+const version = "4.8.114";
+const build = "af4cfd982";
 
 ;// ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -20363,8 +20367,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.8.101";
-const pdfjsBuild = "8e84968cc";
+const pdfjsVersion = "4.8.114";
+const pdfjsBuild = "af4cfd982";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

@@ -41,7 +41,7 @@ jobs:
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
           mkdir "$INPUT_PATH/static"
-          cp -r /static/*  "$INPUT_PATH/static"
+          cp -r static/*  "$INPUT_PATH/static"
           tar \
             --dereference --hard-dereference \
             --directory "$INPUT_PATH" \

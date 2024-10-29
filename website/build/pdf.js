@@ -11208,7 +11208,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "4.8.99",
+    apiVersion: "4.8.101",
     data,
     password,
     disableAutoFetch,
@@ -13008,8 +13008,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.8.99";
-const build = "fb12a700a";
+const version = "4.8.101";
+const build = "8e84968cc";
 
 ;// ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -20363,8 +20363,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.8.99";
-const pdfjsBuild = "fb12a700a";
+const pdfjsVersion = "4.8.101";
+const pdfjsBuild = "8e84968cc";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

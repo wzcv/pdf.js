@@ -71,12 +71,17 @@ jobs:
               mv "website/build/$file" "website/build/${file%.mjs}.js"
               sed -i 's/\.mjs/\.js/g' "website/build/${file%.mjs}.js"
             elif [ -f "website/$file" ]; then
-              mv "website/$file" "website/${file%.mjs}.js"
+              mv "website/web/$file" "website/web/${file%.mjs}.js"
               sed -i 's/\.mjs/\.js/g' "website/${file%.mjs}.js"
             else
               echo "File not found: $file"
             fi
           done
+          if [ -f "website/web/viewer.html" ]; then
+              sed -i 's/\.mjs/\.js/g' "website/web/viewer.html"
+          else
+              echo "File not found: viewer.html"
+          fi
         
       - name: Add, commit, and push to current branch
         run: |

@@ -36,6 +36,7 @@ jobs:
       - name: Archive the website
         shell: sh
         run: |
+          ls
           chmod -c -R +rX "$INPUT_PATH" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done

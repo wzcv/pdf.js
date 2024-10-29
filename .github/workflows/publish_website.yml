@@ -64,8 +64,7 @@ jobs:
         
       - name: Rename and Replace Extension
         run: |
-          ls website/web
-          files_to_rename=("pdf.mjs" "pdf.sandbox.mjs" "pdf.worker.mjs" "viewer.mjs")
+          files_to_rename=("pdf.mjs" "pdf.sandbox.mjs" "pdf.worker.mjs")
           for file in "${files_to_rename[@]}"; do
             if [ -f "website/build/$file" ]; then
               mv "website/build/$file" "website/build/${file%.mjs}.js"

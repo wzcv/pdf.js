@@ -36,7 +36,6 @@ jobs:
       - name: Archive the website
         shell: sh
         run: |
-          ls
           chmod -c -R +rX "$INPUT_PATH" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
@@ -65,18 +64,22 @@ jobs:
         
       - name: Rename and Replace Extension
         run: |
+          ls website/web
           files_to_rename=("pdf.mjs" "pdf.sandbox.mjs" "pdf.worker.mjs" "viewer.mjs")
           for file in "${files_to_rename[@]}"; do
             if [ -f "website/build/$file" ]; then
               mv "website/build/$file" "website/build/${file%.mjs}.js"
               sed -i 's/\.mjs/\.js/g' "website/build/${file%.mjs}.js"
-            elif [ -f "website/$file" ]; then
-              mv "website/web/$file" "website/web/${file%.mjs}.js"
-              sed -i 's/\.mjs/\.js/g' "website/${file%.mjs}.js"
             else
               echo "File not found: $file"
             fi
           done
+          if [ -f "website/web/viewer.mjs" ]; then
+              mv "website/web/viewer.mjs" "website/web/viewer.js"
+              sed -i 's/\.mjs/\.js/g' "website/web/viewer.js"
+          else
+              echo "File not found: viewer.html"
+          fi
           if [ -f "website/web/viewer.html" ]; then
               sed -i 's/\.mjs/\.js/g' "website/web/viewer.html"
           else
